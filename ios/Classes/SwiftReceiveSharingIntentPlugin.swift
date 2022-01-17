@@ -3,11 +3,11 @@ import UIKit
 import Photos
 
 public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
-    static let kMessagesChannel = "receive_sharing_intent/messages";
-    static let kEventsChannelMedia = "receive_sharing_intent/events-media";
-    static let kEventsChannelLink = "receive_sharing_intent/events-text";
+    static let kMessagesChannel = "receive_sharing_intent/messages"
+    static let kEventsChannelMedia = "receive_sharing_intent/events-media"
+    static let kEventsChannelLink = "receive_sharing_intent/events-text"
     
-    private var customSchemePrefix = "ShareMedia";
+    private var customSchemePrefix = "ShareMedia"
     
     private var initialMedia: [SharedMediaFile]? = nil
     private var latestMedia: [SharedMediaFile]? = nil
@@ -15,8 +15,8 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     private var initialText: String? = nil
     private var latestText: String? = nil
     
-    private var eventSinkMedia: FlutterEventSink? = nil;
-    private var eventSinkText: FlutterEventSink? = nil;
+    private var eventSinkMedia: FlutterEventSink? = nil
+    private var eventSinkText: FlutterEventSink? = nil
     
     // Singleton is required for calling functions directly from AppDelegate
     // - it is required if the developer is using also another library, which requires to call "application(_:open:options:)"
@@ -37,20 +37,19 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        
         switch call.method {
         case "getInitialMedia":
-            result(toJson(data: self.initialMedia));
+            result(toJson(data: self.initialMedia))
         case "getInitialText":
-            result(self.initialText);
+            result(self.initialText)
         case "reset":
             self.initialMedia = nil
             self.latestMedia = nil
             self.initialText = nil
             self.latestText = nil
-            result(nil);
+            result(nil)
         default:
-            result(FlutterMethodNotImplemented);
+            result(FlutterMethodNotImplemented)
         }
     }
 
@@ -121,7 +120,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     private func handleUrl(url: URL?, setInitialData: Bool) -> Bool {
         if let url = url {
             let appDomain = Bundle.main.bundleIdentifier!
-            let appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(Bundle.main.bundleIdentifier!)"
+            let appGroupId = (Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String) ?? "group.\(appDomain)"
             let userDefaults = UserDefaults(suiteName: appGroupId)
             if url.fragment == "media" {
                 if let key = url.host?.components(separatedBy: "=").last,
@@ -137,7 +136,6 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         } else if ($0.type == .video && $0.thumbnail == nil) {
                             return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
                         }
-                        
                         return SharedMediaFile.init(path: path, thumbnail: nil, duration: $0.duration, type: $0.type)
                     }
                     latestMedia = sharedMediaFiles
@@ -154,10 +152,10 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                         guard let path = getAbsolutePath(for: $0.path) else {
                             return nil
                         }
-                        return SharedMediaFile.init(path: $0.path, thumbnail: nil, duration: nil, type: $0.type)
+                        return SharedMediaFile.init(path: path, thumbnail: nil, duration: nil, type: $0.type)
                     }
                     latestMedia = sharedMediaFiles
-                    if(setInitialData) {
+                    if (setInitialData) {
                         initialMedia = latestMedia
                     }
                     eventSinkMedia?(toJson(data: latestMedia))
@@ -166,14 +164,14 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
                 if let key = url.host?.components(separatedBy: "=").last,
                     let sharedArray = userDefaults?.object(forKey: key) as? [String] {
                     latestText =  sharedArray.joined(separator: ",")
-                    if(setInitialData) {
+                    if (setInitialData) {
                         initialText = latestText
                     }
                     eventSinkText?(latestText)
                 }
             } else {
                 latestText = url.absoluteString
-                if(setInitialData) {
+                if (setInitialData) {
                     initialText = latestText
                 }
                 eventSinkText?(latestText)
@@ -188,24 +186,24 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         if (arguments as! String? == "media") {
-            eventSinkMedia = events;
+            eventSinkMedia = events
         } else if (arguments as! String? == "text") {
-            eventSinkText = events;
+            eventSinkText = events
         } else {
-            return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument\(String(describing: arguments))", details: nil);
+            return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument\(String(describing: arguments))", details: nil)
         }
-        return nil;
+        return nil
     }
     
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         if (arguments as! String? == "media") {
-            eventSinkMedia = nil;
+            eventSinkMedia = nil
         } else if (arguments as! String? == "text") {
-            eventSinkText = nil;
+            eventSinkText = nil
         } else {
-            return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument as \(String(describing: arguments))", details: nil);
+            return FlutterError.init(code: "NO_SUCH_ARGUMENT", message: "No such argument as \(String(describing: arguments))", details: nil)
         }
-        return nil;
+        return nil
     }
     
     private func getAbsolutePath(for identifier: String) -> String? {
@@ -213,7 +211,7 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
             return identifier.replacingOccurrences(of: "file://", with: "")
         }
         let phAsset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: .none).firstObject
-        if(phAsset == nil) {
+        if (phAsset == nil) {
             return nil
         }
         let (url, _) = getFullSizeImageURLAndOrientation(for: phAsset!)
@@ -250,10 +248,10 @@ public class SwiftReceiveSharingIntentPlugin: NSObject, FlutterPlugin, FlutterSt
     }
     
     class SharedMediaFile: Codable {
-        var path: String;
-        var thumbnail: String?; // video thumbnail
-        var duration: Double?; // video duration in milliseconds
-        var type: SharedMediaType;
+        var path: String
+        var thumbnail: String? // video thumbnail
+        var duration: Double? // video duration in milliseconds
+        var type: SharedMediaType
         
         
         init(path: String, thumbnail: String?, duration: Double?, type: SharedMediaType) {
